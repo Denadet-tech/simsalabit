@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simsalabit – Dilo. Créalo. Juega.</title>
+<link rel="icon" href="icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF7EC; --ink:#2B2340; --soft:#6B6283; --card:#FFFFFF;
+    --pri:#FF6B3D; --pri2:#FFB23F; --ok:#2BB673; --blue:#3D7BFF; --line:#EDE3D3;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Baloo 2',system-ui,sans-serif}
+  .app{max-width:720px;margin:0 auto;padding:16px 14px 40px;min-height:100vh;display:flex;flex-direction:column;gap:14px}
+  header{display:flex;align-items:center;justify-content:space-between}
+  .logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:28px;color:#2B2340}
+  .logo .dot{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--pri),var(--pri2));display:grid;place-items:center;font-size:22px}
+  .iconbtn{border:0;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 12px;font:inherit;font-weight:700;color:var(--ink);cursor:pointer}
+  .timer{font-size:14px;color:var(--soft);font-weight:600}
+  .card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:16px}
+  h2{margin:0 0 6px;font-size:22px}
+  p{margin:0;color:var(--soft)}
+  textarea{width:100%;min-height:92px;border:2px solid var(--line);border-radius:16px;padding:12px;font:inherit;font-size:19px;color:var(--ink);resize:vertical;background:#FFFDF9}
+  textarea:focus{outline:none;border-color:var(--pri)}
+  .hint{display:flex;gap:8px;align-items:center;font-size:15px;color:var(--soft);margin:8px 0 10px}
+  .mic{font-size:20px}
+  .micbtn.on{background:#E53935!important;box-shadow:0 5px 0 #A72421!important}
+  .micbtn{display:flex;align-items:center;gap:10px;width:100%;border:0;background:#3D7BFF;color:#fff;box-shadow:0 5px 0 #2756C7;border-radius:16px;padding:10px 12px;font:inherit;font-size:16px;font-weight:700;cursor:pointer;margin:6px 0 10px;text-align:left}
+  .micdot{width:40px;height:40px;flex:0 0 40px;border-radius:50%;background:rgba(255,255,255,.25);display:grid;place-items:center;font-size:20px}
+  .warn{background:#FFF0E6;border:2px solid #E8501F;border-radius:16px;padding:10px 12px;font-size:15px;color:#2B2340;display:none;margin-bottom:10px}
+  .err small{display:block}
+  .big{width:100%;border:0;border-radius:18px;padding:14px;font:inherit;font-size:21px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--pri),var(--pri2));cursor:pointer;box-shadow:0 5px 0 #D9531F}
+  .big:active{transform:translateY(3px);box-shadow:0 2px 0 #D9531F}
+  .big:disabled{opacity:.55;cursor:default}
+  .ideas{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{border:2px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:15px;cursor:pointer;color:var(--ink)}
+  .stage{display:none;flex-direction:column;gap:10px}
+  .stage.on{display:flex}
+  iframe{width:100%;height:62vh;min-height:380px;border:3px solid var(--ink);border-radius:20px;background:#fff}
+  .row{display:flex;gap:8px}
+  .row > *{flex:1}
+  .btn2{border:2px solid var(--line);background:#fff;border-radius:16px;padding:10px;font:inherit;font-size:16px;font-weight:700;cursor:pointer;color:var(--ink)}
+  .status{font-size:16px;color:var(--soft);text-align:center;min-height:24px}
+  .bubble{background:#FFF0E6;border:2px dashed var(--pri);border-radius:16px;padding:10px 12px;color:var(--ink);font-size:16px}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .gitem{border:2px solid var(--line);border-radius:14px;padding:10px;background:#fff;cursor:pointer;font-size:15px}
+  .gitem b{display:block}
+  /* Panel de padres */
+  .overlay{position:fixed;inset:0;background:rgba(43,35,64,.55);display:none;align-items:center;justify-content:center;padding:14px;z-index:20}
+  .overlay.on{display:flex}
+  .modal{background:#fff;border-radius:22px;max-width:520px;width:100%;max-height:90vh;overflow:auto;padding:18px}
+  .modal h3{margin:0 0 8px;font-size:22px}
+  label{display:block;font-weight:700;margin:12px 0 4px}
+  input[type=text],input[type=number],input[type=password],select{width:100%;border:2px solid var(--line);border-radius:12px;padding:9px;font:inherit;font-size:17px}
+  .switch{display:flex;align-items:center;gap:10px;margin-top:10px;font-weight:600}
+  .log{font-size:14px;border-top:1px solid var(--line);padding:6px 0;color:var(--soft)}
+  .log b{color:var(--ink)}
+  .err{color:#C62828;font-weight:700;font-size:15px;min-height:20px}
+  .lock{text-align:center;padding:30px 10px}
+  .lock .emoji{font-size:64px}
+  small{color:var(--soft)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo"><svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><rect x="6" y="6" width="84" height="74" rx="24" fill="#2B2340"/><path d="M24 76 L18 96 L44 78 Z" fill="#2B2340"/><path d="M48 20 C50.5 37 54 41 71 43.5 C54 46 50.5 50 48 67 C45.5 50 42 46 25 43.5 C42 41 45.5 37 48 20 Z" fill="#FFB23F"/><rect x="68" y="17" width="9" height="9" rx="1.5" fill="#E8501F"/><rect x="78" y="9" width="6" height="6" rx="1" fill="#E8501F"/><rect x="21" y="60" width="6" height="6" rx="1" fill="#FFB23F"/></svg><span style="letter-spacing:-.5px">simsala<span style="color:#E8501F">bit</span></span></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="timer" id="timer"></span>
+      <button class="iconbtn" id="langBtn" aria-label="Idioma / Sprache">🇩🇪 DE</button>
+      <button class="iconbtn" id="parentBtn" data-t>👨‍👩‍👧 Padres</button>
+    </div>
+  </header>
+
+  <div id="lockScreen" class="card lock" style="display:none">
+    <div class="emoji">🌙</div>
+    <h2 data-t>¡Se acabó el tiempo de hoy!</h2>
+    <p data-t>Mañana podrás seguir creando. Pide a tus padres si quieres más tiempo.</p>
+  </div>
+
+  <div id="main">
+    <div class="warn" id="noAI" data-t>⚠️ Falta la clave para crear. Un adulto tiene que ponerla en «Padres».</div>
+    <div class="card" id="createCard">
+      <div style="font-weight:700;color:#E8501F;font-size:15px;margin-bottom:2px" data-t>Dilo. Créalo. Juega.</div>
+      <h2 data-t>¿Qué quieres crear hoy?</h2>
+      <p style="margin-bottom:4px" data-t>Un juego, una tarjeta para tu hermana, un concurso para tus amigos… ¡lo que tú quieras!</p>
+      <button class="micbtn" id="micBtn" data-target="prompt"><span class="micdot">🎤</span><span class="miclabel" data-t>Pulsa y habla</span></button><p class="micmsg" style="display:none;color:#B53A12;margin:0 0 8px"></p>
+      <textarea id="prompt" placeholder="Por ejemplo: un juego de un gato que salta nubes, o una tarjeta de cumpleaños para mi hermano" data-tp></textarea>
+      <div class="ideas" id="ideas"></div>
+      <div style="height:12px"></div>
+      <button class="big" id="goBtn" data-t>✨ ¡Crear!</button>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="bubble" id="aiSays"></div>
+      <iframe id="game" sandbox="allow-scripts" title="Tu creación"></iframe>
+      <div class="card">
+        <h2 style="font-size:19px" data-t>¿Quieres cambiar algo?</h2>
+        <button class="micbtn" id="micBtn2" data-target="change"><span class="micdot">🎤</span><span class="miclabel" data-t>Pulsa y habla</span></button><p class="micmsg" style="display:none;color:#B53A12;margin:0 0 8px"></p>
+        <textarea id="change" placeholder="Por ejemplo: que sea azul, más rápido o con más estrellas" data-tp style="min-height:70px"></textarea>
+        <div style="height:10px"></div>
+        <button class="big" id="changeBtn" data-t>🔧 Cambiar</button>
+        <div class="status" id="status2"></div>
+      </div>
+      <button class="big" id="shareBtn" style="background:linear-gradient(135deg,#2BB673,#3DD68C);box-shadow:0 5px 0 #1E8A55" data-t>📤 Enviar a un amigo</button>
+      <div class="status" id="shareStatus"></div>
+      <div id="linkBox" style="display:none;gap:8px;align-items:center;background:#EAF8F0;border:2px solid #1E9E5E;border-radius:16px;padding:8px 10px;font-size:14px;word-break:break-all">
+        <span style="flex:1"><small data-t>Tu enlace para jugar:</small><br><span id="linkTxt"></span></span>
+        <button class="btn2" id="copyBtn" style="flex:0 0 auto" data-t>Copiar</button>
+      </div>
+      <div class="row">
+        <button class="btn2" id="fullBtn" data-t>⛶ Pantalla grande</button>
+        <button class="btn2" id="newBtn" data-t>🆕 Crear otra cosa</button>
+      </div>
+    </div>
+
+    <div class="card" id="galleryCard" style="display:none">
+      <h2 style="font-size:19px" data-t>Mis creaciones</h2>
+      <div class="gallery" id="gallery"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel de padres -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div id="pinStep">
+      <h3 data-t>🔒 Zona de padres</h3>
+      <p id="pinMsg">Escribe tu PIN de 4 cifras.</p>
+      <label>PIN</label>
+      <input type="password" inputmode="numeric" maxlength="4" id="pinInput">
+      <div class="err" id="pinErr"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn2" id="pinCancel" data-t>Cancelar</button>
+        <button class="big" id="pinOk" style="font-size:17px;padding:10px" data-t>Entrar</button>
+      </div>
+      <small data-t>Primera vez: el PIN que escribas quedará guardado.</small>
+    </div>
+    <div id="settingsStep" style="display:none">
+      <h3 data-t>👨‍👩‍👧 Control parental</h3>
+      <label data-t>Edad del niño</label>
+      <select id="age">
+        <option value="6" data-t>5–7 años (muy sencillo)</option>
+        <option value="9" selected data-t>8–10 años</option>
+        <option value="12" data-t>11–13 años</option>
+      </select>
+      <label data-t>Minutos al día</label>
+      <input type="number" id="minutes" min="5" max="240" value="30">
+      <label data-t>Creaciones al día</label>
+      <input type="number" id="maxGames" min="1" max="50" value="10">
+      <label data-t>Palabras prohibidas (separadas por comas)</label>
+      <input type="text" id="blocked" placeholder="ej: pistola, sangre, matar" data-tp>
+      <div class="switch"><input type="checkbox" id="noViolence" checked> <span data-t>Sin violencia (ni armas ni peleas)</span></div>
+      <div class="switch"><input type="checkbox" id="noScary" checked> <span data-t>Sin miedo (ni monstruos que asusten)</span></div>
+      <div class="switch"><input type="checkbox" id="noChat" checked> <span data-t>Nunca pide nombre ni datos personales</span></div>
+      <div class="switch"><input type="checkbox" id="allowShare" checked> <span data-t>Puede enviar sus creaciones a amigos</span></div>
+      <label data-t>Clave de Anthropic (solo se guarda en este móvil)</label>
+      <input type="password" id="apikeyInput" placeholder="sk-ant-..." autocomplete="off">
+      <label data-t>Cambiar PIN</label>
+      <input type="password" inputmode="numeric" maxlength="4" id="newPin" placeholder="Deja vacío para no cambiarlo" data-tp>
+      <div style="height:12px"></div>
+      <button class="btn2" id="resetTime" data-t>⏱️ Dar tiempo de nuevo hoy</button>
+      <h3 style="margin-top:16px;font-size:18px" data-t>📜 Lo que ha pedido hoy</h3>
+      <div id="logList"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn2" id="closeSettings" data-t>Cerrar</button>
+        <button class="big" id="saveSettings" style="font-size:17px;padding:10px" data-t>Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- almacenamiento seguro ---------- */
+const mem = {};
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('hc_'+k); return v===null ? (k in mem?mem[k]:d) : JSON.parse(v);}catch(e){ return k in mem?mem[k]:d; } },
+  set(k, v){ mem[k]=v; try{ localStorage.setItem('hc_'+k, JSON.stringify(v)); }catch(e){} }
+};
+const today = () => new Date().toISOString().slice(0,10);
+
+const defaults = {age:9, minutes:30, maxGames:10, blocked:'', noViolence:true, noScary:true, noChat:true, allowShare:true};
+let settings = Object.assign({}, defaults, store.get('settings', {}));
+let usage = store.get('usage', {day:today(), seconds:0, games:0, log:[]});
+if (usage.day !== today()) usage = {day:today(), seconds:0, games:0, log:[]};
+
+const $ = id => document.getElementById(id);
+let currentCode = '', currentTitle = '', busy = false;
+
+/* ---------- idiomas ---------- */
+const DE = {
+ '¡Se acabó el tiempo de hoy!':'Für heute ist die Zeit um!',
+ 'Mañana podrás seguir creando. Pide a tus padres si quieres más tiempo.':'Morgen kannst du weiter erfinden. Frag deine Eltern, wenn du mehr Zeit möchtest.',
+ 'Dilo. Créalo. Juega.':'Sag es. Bau es. Spiel es.',
+ '¿Qué quieres crear hoy?':'Was möchtest du heute erschaffen?',
+ 'Un juego, una tarjeta para tu hermana, un concurso para tus amigos… ¡lo que tú quieras!':'Ein Spiel, eine Karte für deine Schwester, ein Quiz für deine Freunde … was immer du willst!',
+ 'Toca el cuadro y pulsa el micrófono de tu teclado para hablar.':'Tippe ins Feld und drück das Mikrofon auf deiner Tastatur, um zu sprechen.',
+ 'Por ejemplo: un juego de un gato que salta nubes, o una tarjeta de cumpleaños para mi hermano':'Zum Beispiel: ein Spiel mit einer Katze, die über Wolken springt, oder eine Geburtstagskarte für meinen Bruder',
+ '✨ ¡Crear!':'✨ Erschaffen!',
+ '¿Quieres cambiar algo?':'Möchtest du etwas ändern?',
+ 'Dilo con el micrófono del teclado.':'Sag es mit dem Mikrofon der Tastatur.',
+ 'Por ejemplo: que sea azul, más rápido o con más estrellas':'Zum Beispiel: in Blau, schneller oder mit mehr Sternen',
+ '🔧 Cambiar':'🔧 Ändern',
+ '📤 Enviar a un amigo':'📤 An Freunde schicken',
+ '⛶ Pantalla grande':'⛶ Großer Bildschirm',
+ '🆕 Crear otra cosa':'🆕 Etwas Neues',
+ 'Mis creaciones':'Meine Werke',
+ '👨‍👩‍👧 Padres':'👨‍👩‍👧 Eltern',
+ '🔒 Zona de padres':'🔒 Elternbereich',
+ 'Escribe tu PIN de 4 cifras.':'Gib deine 4-stellige PIN ein.',
+ 'Crea un PIN de 4 cifras para proteger los ajustes.':'Lege eine 4-stellige PIN fest, um die Einstellungen zu schützen.',
+ 'Cancelar':'Abbrechen','Entrar':'Weiter',
+ 'Primera vez: el PIN que escribas quedará guardado.':'Beim ersten Mal wird die eingegebene PIN gespeichert.',
+ 'Tienen que ser 4 números.':'Es müssen 4 Ziffern sein.','PIN incorrecto.':'Falsche PIN.',
+ '👨‍👩‍👧 Control parental':'👨‍👩‍👧 Kindersicherung',
+ 'Edad del niño':'Alter des Kindes','5–7 años (muy sencillo)':'5–7 Jahre (ganz einfach)','8–10 años':'8–10 Jahre','11–13 años':'11–13 Jahre',
+ 'Minutos al día':'Minuten pro Tag','Creaciones al día':'Werke pro Tag',
+ 'Palabras prohibidas (separadas por comas)':'Verbotene Wörter (mit Komma getrennt)',
+ 'ej: pistola, sangre, matar':'z. B.: Pistole, Blut, töten',
+ 'Sin violencia (ni armas ni peleas)':'Keine Gewalt (keine Waffen, keine Kämpfe)',
+ 'Sin miedo (ni monstruos que asusten)':'Nichts Gruseliges (keine Angst-Monster)',
+ 'Nunca pide nombre ni datos personales':'Fragt nie nach Namen oder persönlichen Daten',
+ 'Puede enviar sus creaciones a amigos':'Darf Werke an Freunde schicken',
+ 'Cambiar PIN':'PIN ändern','Deja vacío para no cambiarlo':'Leer lassen, um sie nicht zu ändern',
+ '⏱️ Dar tiempo de nuevo hoy':'⏱️ Heute neue Zeit geben','✅ Tiempo renovado':'✅ Zeit erneuert',
+ '📜 Lo que ha pedido hoy':'📜 Was heute gewünscht wurde','Todavía nada hoy.':'Heute noch nichts.',
+ 'Cerrar':'Schließen','Guardar':'Speichern',
+ '🎤 Primero dime qué quieres.':'🎤 Sag mir zuerst, was du möchtest.',
+ '🙈 Esa idea no está permitida. ¡Prueba otra!':'🙈 Diese Idee ist nicht erlaubt. Probier eine andere!',
+ '🌟 Hoy ya has creado muchas cosas. ¡Mañana más!':'🌟 Heute hast du schon viel erschaffen. Morgen geht es weiter!',
+ '😴 El ayudante no está disponible ahora mismo.':'😴 Der Helfer ist gerade nicht verfügbar.',
+ '🔒 Hay que dar permiso al ayudante para crear.':'🔒 Der Helfer braucht zuerst die Erlaubnis.',
+ '⏳ Muchas creaciones seguidas. Espera un poquito.':'⏳ Viele Werke hintereinander. Warte kurz.',
+ '😅 Algo ha salido mal. ¡Inténtalo otra vez!':'😅 Etwas ist schiefgegangen. Versuch es nochmal!',
+ '¡Hecho! Mira cómo ha quedado.':'Fertig! Schau, wie es geworden ist.',
+ '¡Aquí tienes tu creación!':'Hier ist dein Werk!',
+ '😴 Aquí no se puede enviar todavía.':'😴 Hier kann man noch nicht senden.',
+ '🎉 ¡Listo! Mándalo por WhatsApp o email. Se abre en cualquier móvil.':'🎉 Fertig! Schick es per WhatsApp oder E-Mail. Es öffnet sich auf jedem Handy.',
+ '😅 No se ha podido enviar. Inténtalo otra vez.':'😅 Senden hat nicht geklappt. Versuch es nochmal.',
+ 'Mezclando píxeles…':'Pixel werden gemischt …','Dibujando…':'Es wird gezeichnet …','Poniendo los botones…':'Knöpfe kommen dazu …',
+ 'Probando que funcione…':'Wird getestet …','Echando purpurina…':'Glitzer drauf …',
+ 'Mi creación':'Mein Werk',
+ 'Toca aquí y luego el micro de tu teclado':'Tippe hier und dann auf das Mikrofon deiner Tastatur',
+ '⚠️ Falta la clave para crear. Un adulto tiene que ponerla en «Padres».':'⚠️ Der Schlüssel zum Erschaffen fehlt. Ein Erwachsener muss ihn unter «Eltern» eintragen.',
+ 'Pulsa y habla':'Drücken und sprechen','Te escucho… pulsa para parar':'Ich höre zu … drück zum Stoppen',
+ 'Este móvil no deja usar el micro aquí. Toca el cuadro y usa el micro del teclado.':'Dieses Handy erlaubt das Mikrofon hier nicht. Tippe ins Feld und nutze das Mikrofon der Tastatur.',
+ 'Clave de Anthropic (solo se guarda en este móvil)':'Anthropic-Schlüssel (wird nur auf diesem Handy gespeichert)',
+ 'Tu enlace para jugar:':'Dein Link zum Spielen:','Copiar':'Kopieren','¡Copiado!':'Kopiert!',
+ '🔑 La clave no es válida. Revísala en «Padres».':'🔑 Der Schlüssel ist ungültig. Prüf ihn unter «Eltern».',
+ '💳 No queda saldo en la cuenta de Anthropic.':'💳 Kein Guthaben mehr im Anthropic-Konto.',
+ 'Esta es la creación de un amigo. Dime qué quieres cambiar para hacerla tuya.':'Das ist das Werk eines Freundes. Sag mir, was du ändern willst, damit es deins wird.',
+ '✍️ Creando…':'✍️ Wird erschaffen …',
+ '⌛ Tarda un poco más de lo normal, espera…':'⌛ Dauert etwas länger, bitte warten …',
+ 'creado':'erschaffen','cambio hecho':'geändert','rechazado por la IA':'von der KI abgelehnt','bloqueado por palabra':'wegen Wort blockiert','enviado a un amigo':'an Freunde geschickt'
+};
+const IDEAS = {
+ es:['🐱 Juego de un gato que salta nubes','🚀 Juego de una nave que esquiva meteoritos','⚽ Penaltis contra un robot','🎂 Tarjeta de cumpleaños para mi hermano','❓ Concurso de preguntas para mis amigos','📖 Cuento donde yo elijo el final','🐶 Mascota virtual que tengo que cuidar','🎹 Piano de sonidos de animales','🎨 Pizarra para pintar con colores mágicos'],
+ de:['🐱 Spiel mit einer Katze, die über Wolken springt','🚀 Spiel mit einem Raumschiff, das Meteoriten ausweicht','⚽ Elfmeterschießen gegen einen Roboter','🎂 Geburtstagskarte für meinen Bruder','❓ Quiz für meine Freunde','📖 Geschichte, bei der ich das Ende wähle','🐶 Virtuelles Haustier, um das ich mich kümmere','🎹 Klavier mit Tiergeräuschen','🎨 Maltafel mit Zauberfarben']
+};
+let lang = store.get('lang', null) || ((navigator.language||'').toLowerCase().startsWith('de') ? 'de' : 'es');
+const T = s => lang==='de' ? (DE[s] || s) : s;
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-t]').forEach(el => { if (!el.dataset.es) el.dataset.es = el.textContent; el.textContent = T(el.dataset.es); });
+  document.querySelectorAll('[data-tp]').forEach(el => { if (!el.dataset.es) el.dataset.es = el.placeholder; el.placeholder = T(el.dataset.es); });
+  $('langBtn').textContent = lang==='de' ? '🇪🇸 ES' : '🇩🇪 DE';
+  document.title = lang==='de' ? 'Simsalabit – Sag es. Bau es. Spiel es.' : 'Simsalabit – Dilo. Créalo. Juega.';
+  $('ideas').innerHTML = '';
+  IDEAS[lang].forEach(t => { const b=document.createElement('button'); b.className='chip'; b.textContent=t; b.onclick=()=>{$('prompt').value=t.replace(/^\S+\s/,'');}; $('ideas').appendChild(b); });
+}
+
+
+applyLang();
+let rec = null, recBtn = null;
+function micMsg(btn, txt){ const m = btn.nextElementSibling; m.textContent = txt; m.style.display = txt ? 'block' : 'none'; }
+['micBtn','micBtn2'].forEach(id => { $(id).onclick = () => {
+  const btn = $(id), box = $(btn.dataset.target);
+  if (rec){ rec.stop(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR){ micMsg(btn, T('Este móvil no deja usar el micro aquí. Toca el cuadro y usa el micro del teclado.')); box.focus(); return; }
+  rec = new SR(); recBtn = btn;
+  rec.lang = lang==='de' ? 'de-DE' : 'es-ES'; rec.interimResults = true; rec.continuous = false;
+  const base = box.value.trim();
+  rec.onresult = e => { let t=''; for (let i=0;i<e.results.length;i++) t += e.results[i][0].transcript; box.value = (base ? base+' ' : '') + t; };
+  rec.onerror = e => { if (e.error==='not-allowed' || e.error==='service-not-allowed') micMsg(btn, T('Este móvil no deja usar el micro aquí. Toca el cuadro y usa el micro del teclado.')); };
+  rec.onend = () => { btn.classList.remove('on'); btn.querySelector('.miclabel').textContent = T('Pulsa y habla'); rec = null; };
+  micMsg(btn, ''); btn.classList.add('on'); btn.querySelector('.miclabel').textContent = T('Te escucho… pulsa para parar');
+  try { rec.start(); } catch(e){ rec = null; btn.classList.remove('on'); micMsg(btn, T('Este móvil no deja usar el micro aquí. Toca el cuadro y usa el micro del teclado.')); }
+}; });
+const apiKey = () => (store.get('apikey', '') || '').trim();
+function checkKey(){ $('noAI').style.display = apiKey() ? 'none' : 'block'; }
+checkKey();
+(async () => {
+  const h = location.hash;
+  if (!h.startsWith('#remix=')) return;
+  try {
+    const code = await unpack(h.slice(7));
+    history.replaceState(null,'',location.pathname);
+    const title = (code.match(/<title>([^<]*)<\/title>/i)||[])[1] || T('Mi creación');
+    showGame(code, title, T('Esta es la creación de un amigo. Dime qué quieres cambiar para hacerla tuya.'));
+  } catch(e){}
+})();
+$('langBtn').onclick = () => { lang = lang==='de' ? 'es' : 'de'; store.set('lang', lang); applyLang(); renderGallery(); };
+
+/* ---------- tiempo ---------- */
+function renderTimer(){
+  const left = Math.max(0, settings.minutes*60 - usage.seconds);
+  $('timer').textContent = '⏱️ ' + Math.ceil(left/60) + ' min';
+  const locked = left <= 0;
+  $('lockScreen').style.display = locked ? 'block' : 'none';
+  $('main').style.display = locked ? 'none' : 'block';
+}
+setInterval(() => {
+  if (document.hidden || $('overlay').classList.contains('on')) return;
+  if (usage.day !== today()) usage = {day:today(), seconds:0, games:0, log:[]};
+  usage.seconds += 5; store.set('usage', usage); renderTimer();
+}, 5000);
+renderTimer();
+
+/* ---------- galería ---------- */
+function renderGallery(){
+  const games = store.get('games', []);
+  $('galleryCard').style.display = games.length ? 'block' : 'none';
+  $('gallery').innerHTML = '';
+  games.slice().reverse().forEach(g => {
+    const d = document.createElement('div'); d.className='gitem';
+    d.innerHTML = '<b></b><small></small>';
+    d.querySelector('b').textContent = g.title; d.querySelector('small').textContent = g.date;
+    d.onclick = () => { currentId = g.id; showGame(g.code, g.title, T('¡Aquí tienes tu creación!')); };
+    $('gallery').appendChild(d);
+  });
+}
+renderGallery();
+
+/* ---------- seguridad ---------- */
+function blockedWord(text){
+  const list = settings.blocked.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+  const t = text.toLowerCase();
+  return list.find(w => t.includes(w));
+}
+function rules(){
+  const ageTxt = settings.age<=6 ? 'un niño de 5 a 7 años: frases muy cortas, botones enormes, casi sin texto, sin perder nunca del todo' :
+                 settings.age<=9 ? 'un niño de 8 a 10 años: texto corto y claro, dificultad suave' :
+                                   'un niño de 11 a 13 años: puede tener puntos, niveles y algo más de reto';
+  let r = `El jugador es ${ageTxt}.\n`;
+  if (settings.noViolence) r += '- Nada de violencia: ni armas, ni sangre, ni peleas, ni matar. Si lo pide, transfórmalo en algo amable (por ejemplo, lanzar burbujas o recoger cosas).\n';
+  if (settings.noScary) r += '- Nada que dé miedo: ni terror, ni monstruos aterradores. Los "enemigos" son simpáticos (nubes grises, charcos, piedras).\n';
+  if (settings.noChat) r += '- La creación NUNCA pide nombre, edad, dirección, fotos ni ningún dato personal, y no tiene chat. (Sí puede incluir un nombre de pila que el niño haya dicho, por ejemplo en una tarjeta para su hermano.)\n';
+  r += '- Nada de contenido sexual, drogas, alcohol, apuestas, odio o lenguaje feo. Si la idea es inapropiada y no se puede transformar en algo bonito, responde SOLO con: <!--NO: frase amable explicando que no y proponiendo otra idea, escrita en ' + (lang==='de' ? 'alemán' : 'español') + '-->\n';
+  return r;
+}
+function systemText(){
+  return `Eres el motor de "Simsalabit", una app donde los niños crean lo que quieran hablando: juegos, tarjetas, cuentos, concursos, herramientas...
+El niño puede pedir LO QUE QUIERA: un juego, una tarjeta o felicitación para un hermano o amigo, un concurso de preguntas, un cuento interactivo, una mascota virtual, un instrumento musical, una herramienta, un dibujo animado... Tú lo conviertes en una mini-app interactiva para el navegador del móvil. Si no está claro qué quiere, elige la versión más divertida.
+
+REGLAS DE SEGURIDAD (obligatorias):
+${rules()}
+REGLAS TÉCNICAS:
+- Devuelve UN solo documento HTML completo, empezando por <!DOCTYPE html>. Nada antes ni después, sin \`\`\`.
+- Todo dentro del archivo: CSS y JavaScript en línea. Sin librerías, sin imágenes externas, sin fetch. Dibuja con canvas, emojis, SVG o CSS.
+- Debe funcionar con el dedo en un móvil (toques, botones grandes en pantalla) y también con teclado.
+- Ocupa toda la pantalla disponible (100vw x 100vh), sin scroll, y se adapta al tamaño.
+- Todos los textos de la creación en ${lang==='de' ? 'ALEMÁN (Hochdeutsch, para niños de Suiza y Alemania)' : 'ESPAÑOL'}. El niño puede hablar en otro idioma: entiéndelo igual.
+- Si es un juego: pantalla de inicio con botón "¡Jugar!" (en alemán "Spielen!"), marcador visible y botón "Otra vez" ("Nochmal") al terminar. Si es otra cosa (tarjeta, cuento, herramienta...), que sea bonita, con animaciones y algo que tocar.
+- Colores alegres, divertido y que funcione a la primera. Nada de alert(), prompt() ni confirm().
+- En la primera línea, dentro de <title>, pon un nombre corto y divertido para la creación.
+- Justo después de </html> NO escribas nada.`;
+}
+
+
+async function unpack(p){
+  const tag = p[0]; const b64 = p.slice(2).replace(/-/g,'+').replace(/_/g,'/');
+  const bin = atob(b64 + '==='.slice((b64.length+3)%4));
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  if (tag === 'r') return new TextDecoder().decode(bytes);
+  const ds = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return await new Response(ds).text();
+}
+/* ---------- motor IA ---------- */
+async function callClaude(userText, onLen){
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'x-api-key': apiKey(), 'anthropic-version':'2023-06-01', 'content-type':'application/json', 'anthropic-dangerous-direct-browser-access':'true'},
+    body: JSON.stringify({model:'claude-sonnet-5-5', max_tokens:16000, stream:true, messages:[{role:'user', content:userText}]})
+  });
+  if (!res.ok){ const d = await res.text().catch(()=> ''); const err = new Error(res.status + ' ' + d.slice(0,200)); err.status = res.status; err.detail = d; throw err; }
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = '', out = '';
+  while (true){
+    const {done, value} = await reader.read(); if (done) break;
+    buf += dec.decode(value, {stream:true});
+    const lines = buf.split('\n'); buf = lines.pop();
+    for (const line of lines){
+      if (!line.startsWith('data:')) continue;
+      try { const ev = JSON.parse(line.slice(5)); if (ev.type==='content_block_delta' && ev.delta && ev.delta.type==='text_delta'){ out += ev.delta.text; onLen(out.length); } } catch(e){}
+    }
+  }
+  return out;
+}
+function extractHTML(t){
+  t = t.replace(/^```(?:html)?\s*/i,'').replace(/```\s*$/,'').trim();
+  const s = t.search(/<!DOCTYPE html>/i);
+  if (s > 0) t = t.slice(s);
+  const e = t.toLowerCase().lastIndexOf('</html>');
+  if (e > 0) t = t.slice(0, e+7);
+  return t;
+}
+const funny = ['Mezclando píxeles…','Dibujando…','Poniendo los botones…','Probando que funcione…','Echando purpurina…'];
+
+async function generate(kind){
+  if (busy) return;
+  const box = kind==='new' ? $('prompt') : $('change');
+  const st = kind==='new' ? $('status') : $('status2');
+  const btn = kind==='new' ? $('goBtn') : $('changeBtn');
+  const text = box.value.trim();
+  if (!text){ st.textContent = T('🎤 Primero dime qué quieres.'); return; }
+  const bad = blockedWord(text);
+  if (bad){ st.textContent = T('🙈 Esa idea no está permitida. ¡Prueba otra!'); logAsk(text, 'bloqueado por palabra'); return; }
+  if (usage.games >= settings.maxGames){ st.textContent = T('🌟 Hoy ya has creado muchas cosas. ¡Mañana más!'); return; }
+
+  if (!apiKey()){ checkKey(); st.textContent = T('⚠️ Falta la clave para crear. Un adulto tiene que ponerla en «Padres».'); return; }
+
+  busy = true; btn.disabled = true;
+  let i = 0, got = 0, t0 = Date.now(); st.textContent = T(funny[0]);
+  const spin = setInterval(()=>{ i=(i+1)%funny.length;
+    const pct = got ? Math.min(97, Math.round(got/90)) : 0;
+    st.textContent = (got ? T('✍️ Creando…') + ' ' + pct + '%  ' : '') + T(funny[i]) + (Date.now()-t0 > 60000 && !got ? '  ' + T('⌛ Tarda un poco más de lo normal, espera…') : '');
+  }, 2000);
+
+  const user = kind==='new'
+    ? `${systemText()}\n\nIDEA DEL NIÑO (dicha en voz alta, puede tener errores): "${text}"\n\nCréalo.`
+    : `${systemText()}\n\nEsta es la creación actual:\n${currentCode}\n\nEL NIÑO PIDE ESTE CAMBIO (dicho en voz alta): "${text}"\n\nDevuelve la creación completa con el cambio hecho, manteniendo todo lo que ya funcionaba.`;
+
+  try{
+    const out = (await callClaude(user, n => { got = n; })).trim();
+    const no = out.match(/<!--\s*NO:\s*([\s\S]*?)-->/);
+    if (no && !/<html/i.test(out)){
+      st.textContent = '';
+      logAsk(text, 'rechazado por la IA');
+      $('aiSays').textContent = '🤖 ' + no[1].trim();
+      if (kind==='new'){ $('stage').classList.add('on'); $('createCard').style.display='none'; $('game').srcdoc = '<body style="font:24px sans-serif;display:grid;place-items:center;height:90vh;margin:0">🌈</body>'; }
+      return;
+    }
+    const code = extractHTML(out);
+    if (!/<html/i.test(code)) throw new Error('sin html');
+    const title = (code.match(/<title>([^<]*)<\/title>/i)||[])[1] || T('Mi creación');
+    usage.games++; store.set('usage', usage);
+    logAsk(text, kind==='new' ? 'creado' : 'cambio hecho');
+    box.value = ''; st.textContent = '';
+    autoSave(code, title, kind);
+    showGame(code, title, kind==='new' ? (lang==='de' ? `Tada! Hier ist "${title}". Probier es aus! Es ist schon gespeichert.` : `¡Tachán! Aquí está "${title}". ¡Pruébalo! Ya está guardado.`) : T('¡Hecho! Mira cómo ha quedado.'));
+  }catch(e){
+    if (e && e.status===401) st.textContent = T('🔑 La clave no es válida. Revísala en «Padres».');
+    else if (e && e.status===400 && /credit|balance/i.test(e.detail||'')) st.textContent = T('💳 No queda saldo en la cuenta de Anthropic.');
+    else if (e && (e.status===429 || e.status===529)) st.textContent = T('⏳ Muchas creaciones seguidas. Espera un poquito.');
+    else st.textContent = T('😅 Algo ha salido mal. ¡Inténtalo otra vez!') + ' [' + ((e && (e.code || e.message)) || '?') + ']';
+  }finally{
+    clearInterval(spin); busy = false; btn.disabled = false;
+  }
+}
+function showGame(code, title, msg){
+  currentCode = code; currentTitle = title; $('linkBox').style.display='none';
+  $('game').srcdoc = code;
+  $('aiSays').textContent = '🤖 ' + msg;
+  $('createCard').style.display = 'none';
+  $('stage').classList.add('on');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function logAsk(text, result){
+  usage.log.push({t:new Date().toTimeString().slice(0,5), text, result});
+  store.set('usage', usage);
+}
+
+$('goBtn').onclick = () => generate('new');
+$('changeBtn').onclick = () => generate('change');
+$('newBtn').onclick = () => { $('stage').classList.remove('on'); $('createCard').style.display='block'; currentCode=''; currentId=null; };
+let currentId = null;
+function autoSave(code, title, kind){
+  const games = store.get('games', []);
+  const date = new Date().toLocaleDateString(lang==='de'?'de-CH':'es-ES');
+  const i = games.findIndex(g => g.id === currentId);
+  if (kind === 'change' && i >= 0){ games[i] = {id:currentId, title, code, date}; }
+  else { currentId = Date.now(); games.push({id:currentId, title, code, date}); }
+  store.set('games', games.slice(-30)); renderGallery();
+}
+function renderShare(){
+  $('shareBtn').style.display = settings.allowShare ? 'block' : 'none';
+  $('shareStatus').textContent = '';
+}
+async function packLink(code){
+  const bytes = new TextEncoder().encode(code);
+  let data, tag = 'z';
+  try {
+    const cs = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    data = new Uint8Array(await new Response(cs).arrayBuffer());
+  } catch(e){ data = bytes; tag = 'r'; }
+  let bin = ''; for (let i=0;i<data.length;i+=0x8000) bin += String.fromCharCode.apply(null, data.subarray(i, i+0x8000));
+  const b64 = btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return new URL('play.html', location.href).href.split('#')[0] + '#' + tag + (lang==='de'?'d':'e') + b64;
+}
+let lastLink = '';
+$('shareBtn').onclick = async () => {
+  if (!currentCode) return;
+  const st = $('shareStatus');
+  try {
+    lastLink = await packLink(currentCode);
+    $('linkTxt').textContent = lastLink.length > 90 ? lastLink.slice(0,90) + '…' : lastLink;
+    $('linkBox').style.display = 'flex';
+    logAsk(currentTitle, 'enviado a un amigo');
+    const text = (lang==='de' ? 'Schau, was ich mit Simsalabit erschaffen habe: ' : 'Mira lo que he creado con Simsalabit: ') + currentTitle + ' 🎮';
+    if (navigator.share){ try { await navigator.share({title: currentTitle, text, url: lastLink}); } catch(e){} }
+    else { window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + lastLink), '_blank'); }
+  } catch(e){ st.textContent = T('😅 No se ha podido enviar. Inténtalo otra vez.'); }
+};
+$('copyBtn').onclick = async () => { try { await navigator.clipboard.writeText(lastLink); $('copyBtn').textContent = T('¡Copiado!'); setTimeout(()=>{ $('copyBtn').textContent = T('Copiar'); }, 1800); } catch(e){} };
+$('fullBtn').onclick = () => {
+  const f = $('game');
+  try { (f.requestFullscreen || f.webkitRequestFullscreen).call(f).catch(()=>{ f.style.height='88vh'; f.scrollIntoView(); }); }
+  catch(e){ f.style.height='88vh'; f.scrollIntoView(); }
+};
+renderShare();
+
+/* ---------- panel de padres ---------- */
+$('parentBtn').onclick = () => {
+  $('overlay').classList.add('on'); $('pinStep').style.display='block'; $('settingsStep').style.display='none';
+  $('pinInput').value=''; $('pinErr').textContent='';
+  $('pinMsg').textContent = T(store.get('pin', null) ? 'Escribe tu PIN de 4 cifras.' : 'Crea un PIN de 4 cifras para proteger los ajustes.');
+};
+$('pinCancel').onclick = () => $('overlay').classList.remove('on');
+$('pinOk').onclick = () => {
+  const v = $('pinInput').value.trim(), pin = store.get('pin', null);
+  if (!/^\d{4}$/.test(v)){ $('pinErr').textContent=T('Tienen que ser 4 números.'); return; }
+  if (!pin) store.set('pin', v);
+  else if (pin !== v){ $('pinErr').textContent=T('PIN incorrecto.'); return; }
+  openSettings();
+};
+function openSettings(){
+  $('pinStep').style.display='none'; $('settingsStep').style.display='block';
+  $('age').value = String(settings.age); $('minutes').value = settings.minutes; $('maxGames').value = settings.maxGames;
+  $('blocked').value = settings.blocked; $('noViolence').checked = settings.noViolence;
+  $('noScary').checked = settings.noScary; $('noChat').checked = settings.noChat; $('allowShare').checked = settings.allowShare; $('newPin').value=''; $('apikeyInput').value = apiKey();
+  const l = $('logList'); l.innerHTML='';
+  if (!usage.log.length) l.innerHTML = '<div class="log"></div>'; l.firstChild.textContent = T('Todavía nada hoy.');
+  usage.log.slice().reverse().forEach(x => {
+    const d=document.createElement('div'); d.className='log';
+    d.innerHTML='<b></b> — <span></span> <i></i>';
+    d.querySelector('b').textContent=x.t; d.querySelector('span').textContent='"'+x.text+'"'; d.querySelector('i').textContent='('+T(x.result)+')';
+    l.appendChild(d);
+  });
+}
+$('saveSettings').onclick = () => {
+  settings = {
+    age:+$('age').value, minutes:Math.max(5,+$('minutes').value||30), maxGames:Math.max(1,+$('maxGames').value||10),
+    blocked:$('blocked').value, noViolence:$('noViolence').checked, noScary:$('noScary').checked, noChat:$('noChat').checked, allowShare:$('allowShare').checked
+  };
+  store.set('settings', settings);
+  store.set('apikey', $('apikeyInput').value.trim()); checkKey();
+  const np = $('newPin').value.trim(); if (/^\d{4}$/.test(np)) store.set('pin', np);
+  $('overlay').classList.remove('on'); renderTimer(); renderShare();
+};
+$('closeSettings').onclick = () => $('overlay').classList.remove('on');
+$('resetTime').onclick = () => { usage.seconds = 0; usage.games = 0; store.set('usage', usage); renderTimer(); $('resetTime').textContent=T('✅ Tiempo renovado'); };
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simsalabit – ¡Juega!</title>
+<link rel="icon" href="icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#FFF7EC;font-family:'Baloo 2',system-ui,sans-serif;color:#2B2340}
+  .wrap{position:fixed;inset:0;display:flex;flex-direction:column}
+  .bar{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#fff;border-bottom:2px solid #EDE3D3}
+  .brand{display:flex;align-items:center;gap:6px;text-decoration:none;color:#2B2340;font-weight:800;font-size:20px}
+  .title{flex:1;font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pill{background:#1E9E5E;color:#fff;text-decoration:none;font-weight:800;border-radius:999px;padding:8px 14px;font-size:15px;white-space:nowrap}
+  iframe{flex:1;width:100%;border:0;background:#fff}
+  .msg{margin:auto;padding:30px;text-align:center;font-size:20px}
+  .made{text-align:center;padding:6px;font-size:14px;color:#5E5577;text-decoration:none;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <a class="brand" href="./" aria-label="Simsalabit">
+      <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true"><rect x="6" y="6" width="84" height="74" rx="24" fill="#2B2340"/><path d="M24 76 L18 96 L44 78 Z" fill="#2B2340"/><path d="M48 20 C50.5 37 54 41 71 43.5 C54 46 50.5 50 48 67 C45.5 50 42 46 25 43.5 C42 41 45.5 37 48 20 Z" fill="#FFB23F"/><rect x="68" y="17" width="9" height="9" rx="1.5" fill="#E8501F"/><rect x="78" y="9" width="6" height="6" rx="1" fill="#E8501F"/></svg>
+      <span>simsala<span style="color:#E8501F">bit</span></span>
+    </a>
+    <div class="title" id="title"></div>
+    <a class="pill" id="remix" href="./">🪄 Hazlo tuyo</a>
+  </div>
+  <div id="stage" style="flex:1;display:flex"></div>
+  <a class="made" id="made" href="./">✨ Crea el tuyo con Simsalabit</a>
+</div>
+<script>
+async function unpack(p){
+  const tag = p[0]; const b64 = p.slice(2).replace(/-/g,'+').replace(/_/g,'/');
+  const bin = atob(b64 + '==='.slice((b64.length+3)%4));
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  if (tag === 'r') return new TextDecoder().decode(bytes);
+  const ds = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return await new Response(ds).text();
+}
+(async () => {
+  const p = location.hash.slice(1);
+  const de = p[1] === 'd';
+  document.documentElement.lang = de ? 'de' : 'es';
+  document.getElementById('remix').textContent = de ? '🪄 Mach es zu deinem' : '🪄 Hazlo tuyo';
+  document.getElementById('made').textContent = de ? '✨ Erschaffe deins mit Simsalabit' : '✨ Crea el tuyo con Simsalabit';
+  const stage = document.getElementById('stage');
+  try {
+    if (!p) throw 0;
+    const code = await unpack(p);
+    const title = (code.match(/<title>([^<]*)<\/title>/i) || [])[1] || 'Simsalabit';
+    document.getElementById('title').textContent = title;
+    document.title = title + ' – Simsalabit';
+    document.getElementById('remix').href = './index.html#remix=' + p;
+    const f = document.createElement('iframe');
+    f.setAttribute('sandbox', 'allow-scripts');
+    f.title = title;
+    f.srcdoc = code;
+    stage.appendChild(f);
+  } catch (e) {
+    stage.innerHTML = '<div class="msg"></div>';
+    stage.firstChild.textContent = de ? '😅 Dieser Link funktioniert nicht.' : '😅 Este enlace no funciona.';
+  }
+})();
+</script>
+</body>
+</html>
